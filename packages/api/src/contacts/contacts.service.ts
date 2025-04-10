@@ -1,28 +1,32 @@
-import { Inject, Injectable } from '@nestjs/common';
-import { CreateContactDto } from './dto/create-contact.dto';
-import { UpdateContactDto } from './dto/update-contact.dto';
+import { Inject, Injectable } from '@nestjs/common'
+import { CreateContactDto } from './dto/create-contact.dto'
+import { UpdateContactDto } from './dto/update-contact.dto'
+import { Model } from 'mongoose'
+import { Contact } from './interfaces/contact.interface'
 
 @Injectable()
 export class ContactsService {
-  constructor(@Inject('CONTACTS_MODEL') private contactsModel) {}
+  constructor(
+    @Inject('CONTACTS_MODEL') private contactsModel: Model<Contact>,
+  ) {}
 
-  create(createContactDto: CreateContactDto) {
-    return 'This action adds a new contact';
+  async create(createContactDto: CreateContactDto) {
+    return await this.contactsModel.insertOne(createContactDto)
   }
 
-  findAll() {
-    return `This action returns all contacts`;
+  async findAll() {
+    return await this.contactsModel.find({})
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} contact`;
+  async findOne(id: number) {
+    return await this.contactsModel.findOne({ id })
   }
 
-  update(id: number, updateContactDto: UpdateContactDto) {
-    return `This action updates a #${id} contact`;
+  async update(id: number, updateContactDto: UpdateContactDto) {
+    return await this.contactsModel.findOneAndUpdate({ id }, updateContactDto)
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} contact`;
+  async remove(id: number) {
+    return await this.contactsModel.deleteOne({ id })
   }
 }
