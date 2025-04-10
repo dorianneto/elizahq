@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common'
 import { CreateContactDto } from './dto/create-contact.dto'
 import { UpdateContactDto } from './dto/update-contact.dto'
-import { Model } from 'mongoose'
+import { Model, Types } from 'mongoose'
 import { Contact } from './interfaces/contact.interface'
 
 @Injectable()
@@ -18,8 +18,8 @@ export class ContactsService {
     return await this.contactsModel.find({})
   }
 
-  async findOne(id: number) {
-    return await this.contactsModel.findOne({ id })
+  async findOne(id: string) {
+    return await this.contactsModel.findOne({ _id: new Types.ObjectId(id) })
   }
 
   async update(id: number, updateContactDto: UpdateContactDto) {
