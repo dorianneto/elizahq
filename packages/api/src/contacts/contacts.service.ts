@@ -22,8 +22,11 @@ export class ContactsService {
     return await this.contactsModel.findOne({ _id: new Types.ObjectId(id) })
   }
 
-  async update(id: number, updateContactDto: UpdateContactDto) {
-    return await this.contactsModel.findOneAndUpdate({ id }, updateContactDto)
+  async update(id: string, updateContactDto: UpdateContactDto) {
+    return await this.contactsModel.findOneAndUpdate(
+      { _id: new Types.ObjectId(id) },
+      updateContactDto,
+    )
   }
 
   async remove(id: number) {
