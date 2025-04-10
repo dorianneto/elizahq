@@ -1,9 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { CreateContactDto } from './dto/create-contact.dto';
 import { UpdateContactDto } from './dto/update-contact.dto';
 
 @Injectable()
 export class ContactsService {
+  constructor(@Inject('CONTACTS_MODEL') private contactsModel) {}
+
   create(createContactDto: CreateContactDto) {
     return 'This action adds a new contact';
   }
