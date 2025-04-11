@@ -158,6 +158,7 @@ export default function Contacts() {
           header={
             <Header
               variant="h1"
+              actions={<Button href="/contacts/new">New</Button>}
               counter={
                 selectedItems?.length
                   ? "(" + selectedItems.length + "/10)"
