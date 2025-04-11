@@ -19,11 +19,24 @@ import {
   Form as FormWrapper,
   useActionData,
 } from 'react-router'
+import { createContact } from './api/contacts'
 
 export async function action({ request }: ActionFunctionArgs) {
+  // await new Promise((resolve) => setTimeout(resolve, 3000))
+
   const formData = await request.formData()
-  await new Promise((resolve) => setTimeout(resolve, 3000))
-  return formData
+
+  try {
+    return await createContact({
+      first_name: formData.get('first_name') as string,
+      last_name: formData.get('last_name') as string,
+      nickname: formData.get('nickname') as string,
+      birthdate: formData.get('birthdate') as string,
+    })
+  } catch (error) {
+    console.error('Error creating contact:', error)
+    return null
+  }
 }
 
 export default function ContactsCreate() {
@@ -38,7 +51,7 @@ export default function ContactsCreate() {
   const data = useActionData()
 
   useEffect(() => {
-    if (data) setLoading(false)
+    if (data || data === null) setLoading(false)
   }, [data])
 
   return (
@@ -120,9 +133,12 @@ export default function ContactsCreate() {
                   constraintText="Use YYYY/MM/DD format."
                 >
                   <DatePicker
-                    onChange={({ detail }) => setBirthdate(detail.value)}
+                    onChange={(e) => {
+                      setBirthdate(e.detail.value)
+                    }}
                     value={birthdate}
                     placeholder="YYYY/MM/DD"
+                    name="birthdate"
                   />
                 </FormField>
               </SpaceBetween>
