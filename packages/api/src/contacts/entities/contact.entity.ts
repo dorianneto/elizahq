@@ -12,8 +12,8 @@ export const ContactSchema = new mongoose.Schema(
 )
 
 export const CreateContactValidationSchema = z.object({
-  first_name: z.string(),
-  last_name: z.string(),
-  nickname: z.string(),
-  birthdate: z.string(),
+  first_name: z.string().nonempty('First name is required'),
+  last_name: z.string().nonempty('Last name is required'),
+  nickname: z.string().optional(),
+  birthdate: z.string().optional(),
 })

@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common'
+import { Injectable, Scope } from '@nestjs/common'
 import { ZodError, ZodIssue, ZodObject, ZodRawShape } from 'zod'
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class Validator {
   private errors: ZodIssue[] = []
 

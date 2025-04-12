@@ -18,7 +18,7 @@ import { CreateContactValidationSchema } from './entities/contact.entity'
 export class ContactsController {
   constructor(
     private readonly contactsService: ContactsService,
-    private readonly validator: Validator,
+    private validator: Validator,
   ) {}
 
   @Post()

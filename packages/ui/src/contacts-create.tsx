@@ -6,6 +6,8 @@ import {
   Button,
   Container,
   DatePicker,
+  Flashbar,
+  FlashbarProps,
   Form,
   FormField,
   Header,
@@ -22,8 +24,6 @@ import {
 import { createContact } from './api/contacts'
 
 export async function action({ request }: ActionFunctionArgs) {
-  // await new Promise((resolve) => setTimeout(resolve, 3000))
-
   const formData = await request.formData()
 
   try {
@@ -35,11 +35,12 @@ export async function action({ request }: ActionFunctionArgs) {
     })
   } catch (error) {
     console.error('Error creating contact:', error)
-    return null
+    return error
   }
 }
 
 export default function ContactsCreate() {
+  const [items, setItems] = useState<FlashbarProps.MessageDefinition[]>([])
   const [loading, setLoading] = useState(false)
   const [birthdate, setBirthdate] = useState<string>('')
   const [firstName, setFirstName] = useState<string>('')
@@ -51,12 +52,28 @@ export default function ContactsCreate() {
   const data = useActionData()
 
   useEffect(() => {
-    if (data || data === null) setLoading(false)
+    if (data?.isAxiosError) setLoading(false)
+    if (data?._id) {
+      setItems([
+        ...items,
+        {
+          type: 'success',
+          content: 'Contact created successfuly!',
+          action: <Button href={`/contacts/${data._id}`}>View contact</Button>,
+          dismissible: true,
+          onDismiss: () =>
+            setItems((items) => items.filter((item) => item.id !== data._id)),
+          id: data._id,
+        },
+      ])
+      setLoading(false)
+    }
   }, [data])
 
   return (
     <CustomAppLayout
       ref={appLayout}
+      notifications={<Flashbar stackItems items={items} />}
       navigation={
         <SideNavigation
           activeHref={'#'}
@@ -104,6 +121,9 @@ export default function ContactsCreate() {
               </SpaceBetween>
             }
             header={<Header variant="h1">Your Contacts</Header>}
+            errorText={data?.response?.data?.message
+              .map((m: { message: string }) => m.message)
+              .join(', ')}
           >
             <Container>
               <SpaceBetween direction="vertical" size="l">
