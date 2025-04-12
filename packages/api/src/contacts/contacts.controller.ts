@@ -11,8 +11,8 @@ import {
 import { ContactsService } from './contacts.service'
 import { CreateContactDto } from './dto/create-contact.dto'
 import { UpdateContactDto } from './dto/update-contact.dto'
-import { z } from 'zod'
 import { Validator } from 'src/validator/validator'
+import { CreateContactValidationSchema } from './entities/contact.entity'
 
 @Controller('contacts')
 export class ContactsController {
@@ -23,17 +23,10 @@ export class ContactsController {
 
   @Post()
   create(@Body() payload: CreateContactDto) {
-    const CreateContactSchema = z.object({
-      first_name: z.string(),
-      last_name: z.string(),
-      nickname: z.string(),
-      birthdate: z.string(),
-    })
+    this.validator.validate(CreateContactValidationSchema, payload)
 
-    const errors = this.validator.validate(CreateContactSchema, payload)
-
-    if (errors.length > 0) {
-      throw new BadRequestException(errors)
+    if (this.validator.hasErrors()) {
+      throw new BadRequestException(this.validator.getErrors())
     }
 
     const contact = new CreateContactDto()
