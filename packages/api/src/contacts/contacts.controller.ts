@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   BadRequestException,
+  Query,
 } from '@nestjs/common'
 import { ContactsService } from './contacts.service'
 import { CreateContactDto } from './dto/create-contact.dto'
@@ -39,8 +40,9 @@ export class ContactsController {
   }
 
   @Get()
-  findAll() {
-    return this.contactsService.findAll()
+  async findAll(@Query('page') page: number) {
+    const result = await this.contactsService.findAll(page);
+    return result[0];
   }
 
   @Get(':id')

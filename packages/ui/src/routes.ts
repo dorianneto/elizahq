@@ -1,7 +1,7 @@
 import { createBrowserRouter } from 'react-router'
 import App from './app'
 import Home from './home'
-import Contacts from './contacts'
+import Contacts, { loader as ContactsLoader } from './contacts'
 import ContactsCreate, {
   action as ContactsCreateAction,
 } from './contacts-create'
@@ -12,7 +12,7 @@ export const router = createBrowserRouter([
     Component: App,
     children: [
       { index: true, Component: Home },
-      { path: 'contacts', Component: Contacts },
+      { path: 'contacts', Component: Contacts, loader: ContactsLoader },
       {
         path: 'contacts/new',
         Component: ContactsCreate,

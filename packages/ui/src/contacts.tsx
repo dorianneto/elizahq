@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { CustomAppLayout } from "./details/components/app-layout";
+import { useRef, useState } from 'react'
+import { CustomAppLayout } from './details/components/app-layout'
 import {
   AppLayoutProps,
   Box,
@@ -13,49 +13,61 @@ import {
   SideNavigation,
   SpaceBetween,
   TextFilter,
-} from "@cloudscape-design/components";
-import { PageHeader } from "./details/components/page-header";
+} from '@cloudscape-design/components'
+import { useLoaderData, useNavigate } from 'react-router'
+import { loadContacts } from './api/contacts'
+
+export async function loader({ request }: { request: Request }) {
+  const url = new URL(request.url)
+  const page = url.searchParams.get('p') ?? 1
+  return await loadContacts({ page: Number(page) })
+}
 
 export default function Contacts() {
-  const appLayout = useRef<AppLayoutProps.Ref>(null);
-  const [selectedItems, setSelectedItems] = useState([{ name: "Item 2" }]);
+  const [selectedItems, setSelectedItems] = useState([])
+  const [page, setPage] = useState(1)
+
+  const data = useLoaderData<typeof loader>()
+  const navigate = useNavigate()
+
+  const appLayout = useRef<AppLayoutProps.Ref>(null)
 
   return (
     <CustomAppLayout
       ref={appLayout}
       navigation={
         <SideNavigation
-          activeHref={"#"}
+          activeHref={'#'}
           items={[
             {
-              type: "link",
-              text: "Dashboard",
-              href: "/",
+              type: 'link',
+              text: 'Dashboard',
+              href: '/',
             },
             {
-              type: "link",
-              text: "Contacts",
-              href: "/contacts",
+              type: 'link',
+              text: 'Contacts',
+              href: '/contacts',
             },
             {
-              type: "link",
-              text: "Journal",
-              href: "/journal",
+              type: 'link',
+              text: 'Journal',
+              href: '/journal',
             },
             {
-              type: "link",
-              text: "Birthdays",
-              href: "/birthdays",
+              type: 'link',
+              text: 'Birthdays',
+              href: '/birthdays',
             },
             {
-              type: "link",
-              text: "Locations",
-              href: "/locations",
+              type: 'link',
+              text: 'Locations',
+              href: '/locations',
             },
           ]}
         />
       }
-      breadcrumbs={<BreadcrumbGroup items={[{ text: "Home", href: "#" }]} />}
+      breadcrumbs={<BreadcrumbGroup items={[{ text: 'Home', href: '#' }]} />}
       content={
         <Cards
           variant="full-page"
@@ -65,89 +77,34 @@ export default function Contacts() {
           selectedItems={selectedItems}
           ariaLabels={{
             itemSelectionLabel: (e, i) => `select ${i.name}`,
-            selectionGroupLabel: "Item selection",
+            selectionGroupLabel: 'Item selection',
           }}
           cardDefinition={{
             header: (item) => (
-              <Link href={`/contacts/${item.id}`} fontSize="heading-m">
-                {item.name}
+              <Link href={`/contacts/${item._id}`} fontSize="heading-m">
+                {item.first_name} {item.last_name}
               </Link>
             ),
             sections: [
               {
-                id: "description",
-                header: "Description",
-                content: (item) => item.description,
+                id: 'nickname',
+                header: 'Nickname',
+                content: (item) => item.nickname,
               },
               {
-                id: "type",
-                header: "Type",
-                content: (item) => item.type,
-              },
-              {
-                id: "size",
-                header: "Size",
-                content: (item) => item.size,
+                id: 'birthdate',
+                header: 'Birthdate',
+                content: (item) => item.birthdate,
               },
             ],
           }}
-          cardsPerRow={[{ cards: 1 }, { minWidth: 500, cards: 4 }]}
-          items={[
-            {
-              id: "1",
-              name: "Item 1",
-              alt: "First",
-              description: "This is the first item",
-              type: "1A",
-              size: "Small",
-            },
-            {
-              id: "2",
-              name: "Item 2",
-              alt: "Second",
-              description: "This is the second item",
-              type: "1B",
-              size: "Large",
-            },
-            {
-              id: "3",
-              name: "Item 3",
-              alt: "Third",
-              description: "This is the third item",
-              type: "1A",
-              size: "Large",
-            },
-            {
-              id: "4",
-              name: "Item 4",
-              alt: "Fourth",
-              description: "This is the fourth item",
-              type: "2A",
-              size: "Small",
-            },
-            {
-              id: "5",
-              name: "Item 5",
-              alt: "Fifth",
-              description: "This is the fifth item",
-              type: "2A",
-              size: "Large",
-            },
-            {
-              id: "6",
-              name: "Item 6",
-              alt: "Sixth",
-              description: "This is the sixth item",
-              type: "1A",
-              size: "Small",
-            },
-          ]}
+          cardsPerRow={[{ cards: 1 }, { minWidth: 500, cards: 5 }]}
+          items={data.data}
           loadingText="Loading resources"
           selectionType="multi"
-          trackBy="name"
-          visibleSections={["description", "type", "size"]}
+          trackBy="_id"
           empty={
-            <Box margin={{ vertical: "xs" }} textAlign="center" color="inherit">
+            <Box margin={{ vertical: 'xs' }} textAlign="center" color="inherit">
               <SpaceBetween size="m">
                 <b>No resources</b>
                 <Button>Create resource</Button>
@@ -161,14 +118,26 @@ export default function Contacts() {
               actions={<Button href="/contacts/new">New</Button>}
               counter={
                 selectedItems?.length
-                  ? "(" + selectedItems.length + "/10)"
-                  : "(10)"
+                  ? '(' + selectedItems.length + '/10)'
+                  : '(10)'
               }
             >
               Your Contacts
             </Header>
           }
-          pagination={<Pagination currentPageIndex={1} pagesCount={2} />}
+          pagination={
+            <Pagination
+              disabled={!data?.pagination[0]?.count}
+              currentPageIndex={page}
+              onChange={({ detail }) => {
+                setPage(detail.currentPageIndex)
+                navigate(`/contacts?p=${detail.currentPageIndex}`, {
+                  replace: true,
+                })
+              }}
+              pagesCount={Math.round(data?.pagination[0]?.count / 10)}
+            />
+          }
           preferences={
             <CollectionPreferences
               title="Preferences"
@@ -176,27 +145,27 @@ export default function Contacts() {
               cancelLabel="Cancel"
               preferences={{
                 pageSize: 6,
-                visibleContent: ["description", "type", "size"],
+                visibleContent: ['description', 'type', 'size'],
               }}
               pageSizePreference={{
-                title: "Page size",
+                title: 'Page size',
                 options: [
-                  { value: 6, label: "6 resources" },
-                  { value: 12, label: "12 resources" },
+                  { value: 6, label: '6 resources' },
+                  { value: 12, label: '12 resources' },
                 ],
               }}
               visibleContentPreference={{
-                title: "Select visible content",
+                title: 'Select visible content',
                 options: [
                   {
-                    label: "Main distribution properties",
+                    label: 'Main distribution properties',
                     options: [
                       {
-                        id: "description",
-                        label: "Description",
+                        id: 'description',
+                        label: 'Description',
                       },
-                      { id: "type", label: "Type" },
-                      { id: "size", label: "Size" },
+                      { id: 'type', label: 'Type' },
+                      { id: 'size', label: 'Size' },
                     ],
                   },
                 ],
@@ -207,5 +176,5 @@ export default function Contacts() {
       }
       contentType="cards"
     />
-  );
+  )
 }

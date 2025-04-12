@@ -14,8 +14,27 @@ export class ContactsService {
     return await this.contactsModel.insertOne(createContactDto)
   }
 
-  async findAll() {
-    return await this.contactsModel.find({})
+  async findAll(page: number) {
+    const skip = (page - 1) * 10
+
+    const contacts: { data: Contact[]; pagination: { count: number }[] }[] =
+      await this.contactsModel.aggregate([
+        {
+          $facet: {
+            data: [{ $match: {} }, { $skip: skip }, { $limit: 10 }],
+            pagination: [
+              {
+                $group: {
+                  _id: null,
+                  count: { $sum: 1 },
+                },
+              },
+            ],
+          },
+        },
+      ])
+
+    return contacts
   }
 
   async findOne(id: string) {
