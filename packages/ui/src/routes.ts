@@ -7,6 +7,10 @@ import ContactsCreate, {
 } from './contacts-create'
 import Login from './login'
 import ProtectedRoute from './auth/protected-route'
+import ContactsUpdate, {
+  loader as ContactLoader,
+  action as ContactsUpdateAction,
+} from './contacts-update'
 
 export const router = createBrowserRouter([
   {
@@ -27,6 +31,12 @@ export const router = createBrowserRouter([
             path: 'contacts/new',
             Component: ContactsCreate,
             action: ContactsCreateAction,
+          },
+          {
+            path: 'contacts/:id',
+            Component: ContactsUpdate,
+            loader: ContactLoader,
+            action: ContactsUpdateAction,
           },
         ],
       },

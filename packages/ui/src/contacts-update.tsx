@@ -19,56 +19,63 @@ import {
 import {
   ActionFunctionArgs,
   Form as FormWrapper,
+  LoaderFunctionArgs,
   useActionData,
+  useLoaderData,
 } from 'react-router'
-import { createContact } from './api/contacts'
+import { loadContact, updateContact } from './api/contacts'
 
-export async function action({ request }: ActionFunctionArgs) {
+export async function loader({ params }: LoaderFunctionArgs) {
+  return await loadContact({ id: params.id! })
+}
+
+export async function action({ request, params }: ActionFunctionArgs) {
   const formData = await request.formData()
 
   try {
-    return await createContact({
+    return await updateContact(params.id!, {
       first_name: formData.get('first_name') as string,
       last_name: formData.get('last_name') as string,
       nickname: formData.get('nickname') as string,
       birthdate: formData.get('birthdate') as string,
     })
   } catch (error) {
-    console.error('Error creating contact:', error)
+    console.error('Error updating contact:', error)
     return error
   }
 }
 
-export default function ContactsCreate() {
+export default function ContactsUpdate() {
+  const updatedData = useActionData()
+  const data = useLoaderData<typeof loader>()
+
   const [items, setItems] = useState<FlashbarProps.MessageDefinition[]>([])
   const [loading, setLoading] = useState(false)
-  const [birthdate, setBirthdate] = useState<string>('')
-  const [firstName, setFirstName] = useState<string>('')
-  const [lastName, setLastName] = useState<string>('')
-  const [nickname, setNickname] = useState<string>('')
+  const [firstName, setFirstName] = useState<string>(data.first_name)
+  const [lastName, setLastName] = useState<string>(data.last_name)
+  const [nickname, setNickname] = useState<string>(data.nickname)
+  const [birthdate, setBirthdate] = useState<string>(data.birthdate || '')
 
   const appLayout = useRef<AppLayoutProps.Ref>(null)
 
-  const data = useActionData()
-
   useEffect(() => {
-    if (data?.isAxiosError) setLoading(false)
-    if (data?._id) {
+    if (updatedData?.isAxiosError) setLoading(false)
+    if (updatedData?._id) {
       setItems([
         ...items,
         {
           type: 'success',
-          content: 'Contact created successfuly!',
-          action: <Button href={`/contacts/${data._id}`}>View contact</Button>,
+          content: 'Contact updated successfuly!',
+          action: <Button href={'/contacts'}>View contacts</Button>,
           dismissible: true,
           onDismiss: () =>
-            setItems((items) => items.filter((item) => item.id !== data._id)),
-          id: data._id,
+            setItems((items) => items.filter((item) => item.id !== updatedData._id)),
+          id: updatedData._id,
         },
       ])
       setLoading(false)
     }
-  }, [data])
+  }, [updatedData])
 
   return (
     <CustomAppLayout
@@ -120,8 +127,12 @@ export default function ContactsCreate() {
                 </Button>
               </SpaceBetween>
             }
-            header={<Header variant="h1" description="The quality of your contacts is more important than the quantity">New Contacts</Header>}
-            errorText={data?.response?.data?.message
+            header={
+              <Header variant="h1" description="Keep your contacts updated is important for you and your friends">
+                Update your contact
+              </Header>
+            }
+            errorText={updatedData?.response?.data?.message
               .map((m: { message: string }) => m.message)
               .join(', ')}
           >
