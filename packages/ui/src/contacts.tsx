@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { CustomAppLayout } from './details/components/app-layout'
 import {
   AppLayoutProps,
@@ -14,8 +14,8 @@ import {
   SpaceBetween,
   TextFilter,
 } from '@cloudscape-design/components'
-import { useLoaderData, useNavigate } from 'react-router'
-import { loadContacts } from './api/contacts'
+import { useLoaderData, useNavigate, useRevalidator } from 'react-router'
+import { loadContacts, removeContact } from './api/contacts'
 
 export async function loader({ request }: { request: Request }) {
   const url = new URL(request.url)
@@ -28,9 +28,23 @@ export default function Contacts() {
   const [page, setPage] = useState(1)
 
   const data = useLoaderData<typeof loader>()
+  const revalidator = useRevalidator()
   const navigate = useNavigate()
 
   const appLayout = useRef<AppLayoutProps.Ref>(null)
+
+  const handleDelete = useCallback(async () => {
+    if (selectedItems.length === 0) return
+
+    const ids = selectedItems.map((item: any) => item._id)
+    await Promise.all(
+      ids.map(async (id: string) => {
+        await removeContact({ id })
+      }),
+    )
+    setSelectedItems([])
+    await revalidator.revalidate()
+  }, [selectedItems, revalidator])
 
   return (
     <CustomAppLayout
@@ -76,7 +90,7 @@ export default function Contacts() {
           }
           selectedItems={selectedItems}
           ariaLabels={{
-            itemSelectionLabel: (e, i) => `select ${i.name}`,
+            itemSelectionLabel: (e, i) => `select ${i.first_name}`,
             selectionGroupLabel: 'Item selection',
           }}
           cardDefinition={{
@@ -115,7 +129,17 @@ export default function Contacts() {
           header={
             <Header
               variant="h1"
-              actions={<Button href="/contacts/new">New</Button>}
+              actions={
+                <SpaceBetween direction="horizontal" size="xs">
+                  <Button
+                    disabled={!selectedItems?.length}
+                    onClick={handleDelete}
+                  >
+                    Delete
+                  </Button>
+                  <Button href="/contacts/new">New</Button>
+                </SpaceBetween>
+              }
               counter={
                 selectedItems?.length
                   ? '(' + selectedItems.length + '/10)'

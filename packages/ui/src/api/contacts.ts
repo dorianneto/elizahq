@@ -24,3 +24,13 @@ export const loadContacts = async ({ page }: { page: number }) => {
 
   return response.data
 }
+
+export const removeContact = async ({ id }: { id: string }) => {
+  const response = await client.delete(`contacts/${id}`)
+
+  if (response.status !== 200) {
+    throw new Error('Failed to delete contact')
+  }
+
+  return response
+}
