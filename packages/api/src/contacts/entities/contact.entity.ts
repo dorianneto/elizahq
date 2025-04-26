@@ -17,3 +17,5 @@ export const CreateContactValidationSchema = z.object({
   nickname: z.string().optional(),
   birthdate: z.string().optional(),
 })
+
+export const UpdateContactValidationSchema = CreateContactValidationSchema

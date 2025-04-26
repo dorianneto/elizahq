@@ -10,8 +10,8 @@ export class ContactsService {
     @Inject('CONTACTS_MODEL') private contactsModel: Model<Contact>,
   ) {}
 
-  async create(createContactDto: CreateContactDto) {
-    return await this.contactsModel.insertOne(createContactDto)
+  async create(data: CreateContactDto) {
+    return await this.contactsModel.insertOne(data)
   }
 
   async findAll(page: number) {
@@ -41,14 +41,15 @@ export class ContactsService {
     return await this.contactsModel.findOne({ _id: new Types.ObjectId(id) })
   }
 
-  async update(id: string, updateContactDto: UpdateContactDto) {
+  async update(id: string, data: UpdateContactDto) {
     return await this.contactsModel.findOneAndUpdate(
       { _id: new Types.ObjectId(id) },
-      updateContactDto,
+      data,
+      { new: true },
     )
   }
 
-  async remove(id: number) {
-    return await this.contactsModel.deleteOne({ id })
+  async remove(id: string) {
+    return await this.contactsModel.deleteOne({ _id: new Types.ObjectId(id) })
   }
 }

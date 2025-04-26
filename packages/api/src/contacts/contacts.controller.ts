@@ -8,12 +8,13 @@ import {
   Delete,
   BadRequestException,
   Query,
+  NotFoundException,
 } from '@nestjs/common'
 import { ContactsService } from './contacts.service'
 import { CreateContactDto } from './dto/create-contact.dto'
 import { UpdateContactDto } from './dto/update-contact.dto'
 import { Validator } from 'src/validator/validator'
-import { CreateContactValidationSchema } from './entities/contact.entity'
+import { CreateContactValidationSchema, UpdateContactValidationSchema } from './entities/contact.entity'
 
 @Controller('contacts')
 export class ContactsController {
@@ -51,12 +52,30 @@ export class ContactsController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateContactDto: UpdateContactDto) {
-    return this.contactsService.update(id, updateContactDto)
+  async update(@Param('id') id: string, @Body() payload: UpdateContactDto) {
+    this.validator.validate(UpdateContactValidationSchema, payload)
+
+    if (this.validator.hasErrors()) {
+      throw new BadRequestException(this.validator.getErrors())
+    }
+
+    const contact = new UpdateContactDto()
+    contact.first_name = payload.first_name
+    contact.last_name = payload.last_name
+    contact.nickname = payload.nickname
+    contact.birthdate = payload.birthdate
+
+    const result = await this.contactsService.update(id, contact)
+
+    if (!result) {
+      throw new NotFoundException(`Contact with id ${id} not found`)
+    }
+
+    return result
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.contactsService.remove(+id)
+    return this.contactsService.remove(id)
   }
 }
