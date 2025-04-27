@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { CustomAppLayout } from './details/components/app-layout'
 import {
   AppLayoutProps,
@@ -24,10 +24,13 @@ export async function loader({ request }: { request: Request }) {
 }
 
 export default function Contacts() {
+  const loaderData = useLoaderData<typeof loader>()
+
+  const [contacts, setContacts] = useState(loaderData)
   const [selectedItems, setSelectedItems] = useState([])
   const [page, setPage] = useState(1)
+  const [filteringText, setFilteringText] = useState('')
 
-  const data = useLoaderData<typeof loader>()
   const revalidator = useRevalidator()
   const navigate = useNavigate()
 
@@ -45,6 +48,18 @@ export default function Contacts() {
     setSelectedItems([])
     await revalidator.revalidate()
   }, [selectedItems, revalidator])
+
+  useEffect(() => {
+    const filtered = loaderData.data.filter(
+      (i: any) =>
+        i.first_name.toLowerCase().indexOf(filteringText.toLowerCase()) > -1,
+    )
+
+    setContacts({
+      ...contacts,
+      data: filtered,
+    })
+  }, [filteringText])
 
   return (
     <CustomAppLayout
@@ -113,19 +128,26 @@ export default function Contacts() {
             ],
           }}
           cardsPerRow={[{ cards: 1 }, { minWidth: 500, cards: 5 }]}
-          items={data.data}
-          loadingText="Loading resources"
+          items={contacts.data}
+          loadingText="Loading contacts"
           selectionType="multi"
           trackBy="_id"
           empty={
             <Box margin={{ vertical: 'xs' }} textAlign="center" color="inherit">
               <SpaceBetween size="m">
-                <b>No resources</b>
-                <Button>Create resource</Button>
+                <b>No contacts</b>
+                <Button>Create a contact</Button>
               </SpaceBetween>
             </Box>
           }
-          filter={<TextFilter filteringPlaceholder="Find resources" />}
+          filter={
+            <TextFilter
+              filteringPlaceholder="Find contacts"
+              filteringText={filteringText}
+              onChange={({ detail }) => setFilteringText(detail.filteringText)}
+              countText={`${contacts.data.length} matches`}
+            />
+          }
           header={
             <Header
               variant="h1"
@@ -151,7 +173,7 @@ export default function Contacts() {
           }
           pagination={
             <Pagination
-              disabled={!data?.pagination[0]?.count}
+              disabled={!contacts?.pagination[0]?.count}
               currentPageIndex={page}
               onChange={({ detail }) => {
                 setPage(detail.currentPageIndex)
@@ -159,41 +181,7 @@ export default function Contacts() {
                   replace: true,
                 })
               }}
-              pagesCount={Math.round(data?.pagination[0]?.count / 10)}
-            />
-          }
-          preferences={
-            <CollectionPreferences
-              title="Preferences"
-              confirmLabel="Confirm"
-              cancelLabel="Cancel"
-              preferences={{
-                pageSize: 6,
-                visibleContent: ['description', 'type', 'size'],
-              }}
-              pageSizePreference={{
-                title: 'Page size',
-                options: [
-                  { value: 6, label: '6 resources' },
-                  { value: 12, label: '12 resources' },
-                ],
-              }}
-              visibleContentPreference={{
-                title: 'Select visible content',
-                options: [
-                  {
-                    label: 'Main distribution properties',
-                    options: [
-                      {
-                        id: 'description',
-                        label: 'Description',
-                      },
-                      { id: 'type', label: 'Type' },
-                      { id: 'size', label: 'Size' },
-                    ],
-                  },
-                ],
-              }}
+              pagesCount={Math.round(contacts?.pagination[0]?.count / 10)}
             />
           }
         />
